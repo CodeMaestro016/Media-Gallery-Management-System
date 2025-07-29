@@ -8,6 +8,7 @@ function ImageUpload() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
+  const [shared, setShared] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
@@ -51,27 +52,19 @@ function ImageUpload() {
     formData.append('title', title);
     formData.append('description', description);
     formData.append('tags', tags);
+    formData.append('shared', shared);
 
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No authentication token found. Please log in.');
-        return;
-      }
-
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/media/upload`;
-      console.log('Request URL:', apiUrl); // Debug URL
-      const response = await axios.post(apiUrl, formData, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/media/upload`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Upload response:', response.data); // Debug response
       navigate('/gallery');
     } catch (err) {
-      setError(err.response?.data?.message || 'Upload failed. Check console for details.');
-      console.error('Upload error:', err); // Debug error
+      setError(err.response?.data?.message || 'Upload failed');
     }
   };
 
@@ -132,6 +125,17 @@ function ImageUpload() {
               onChange={(e) => setTags(e.target.value)}
               className="w-full p-2 border rounded"
             />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700">
+              <input
+                type="checkbox"
+                checked={shared}
+                onChange={(e) => setShared(e.target.checked)}
+                className="mr-2"
+              />
+              Share this image
+            </label>
           </div>
           <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
             Upload
