@@ -3,8 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 function ImageUpload() {
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [preview, setPreview] = useState([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
@@ -14,41 +14,59 @@ function ImageUpload() {
   const navigate = useNavigate();
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile && ['image/jpeg', 'image/png'].includes(selectedFile.type) && selectedFile.size <= 5 * 1024 * 1024) {
-      setFile(selectedFile);
-      setPreview(URL.createObjectURL(selectedFile));
-      setError('');
-    } else {
-      setError('Please upload a JPG or PNG file (max 5MB)');
-      setFile(null);
-      setPreview(null);
+    const selectedFiles = Array.from(e.target.files);
+    if (selectedFiles.length > 10) {
+      setError('Maximum 10 files can be uploaded at once');
+      setFiles([]);
+      setPreview([]);
+      return;
     }
+
+    const validFiles = selectedFiles.filter(file =>
+      ['image/jpeg', 'image/png'].includes(file.type) && file.size <= 5 * 1024 * 1024
+    );
+    if (validFiles.length !== selectedFiles.length) {
+      setError('Please upload only JPG or PNG files (max 5MB each)');
+    }
+
+    setFiles(validFiles);
+    setPreview(validFiles.map(file => URL.createObjectURL(file)));
+    setError('');
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && ['image/jpeg', 'image/png'].includes(droppedFile.type) && droppedFile.size <= 5 * 1024 * 1024) {
-      setFile(droppedFile);
-      setPreview(URL.createObjectURL(droppedFile));
-      setError('');
-    } else {
-      setError('Please upload a JPG or PNG file (max 5MB)');
-      setFile(null);
-      setPreview(null);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 10) {
+      setError('Maximum 10 files can be uploaded at once');
+      setFiles([]);
+      setPreview([]);
+      return;
     }
+
+    const validFiles = droppedFiles.filter(file =>
+      ['image/jpeg', 'image/png'].includes(file.type) && file.size <= 5 * 1024 * 1024
+    );
+    if (validFiles.length !== droppedFiles.length) {
+      setError('Please upload only JPG or PNG files (max 5MB each)');
+    }
+
+    setFiles(validFiles);
+    setPreview(validFiles.map(file => URL.createObjectURL(file)));
+    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file || !title) {
-      setError('File and title are required');
+    if (!files.length || !title) {
+      setError('Files and title are required');
       return;
     }
 
     const formData = new FormData();
-    formData.append('image', file);
+    files.forEach((file) => {
+      formData.append('images', file);
+    });
     formData.append('title', title);
     formData.append('description', description);
     formData.append('tags', tags);
@@ -56,12 +74,13 @@ function ImageUpload() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/media/upload`, formData, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/media/upload`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
+      console.log('Upload response:', res.data); // Debug log
       navigate('/gallery');
     } catch (err) {
       setError(err.response?.data?.message || 'Upload failed');
@@ -71,20 +90,25 @@ function ImageUpload() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Upload Image</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">Upload Images</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <div
           className="border-2 border-dashed border-gray-300 p-4 mb-4 text-center"
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
         >
-          {preview ? (
-            <img src={preview} alt="Preview" className="max-w-full h-auto mb-4" />
+          {preview.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2">
+              {preview.map((src, index) => (
+                <img key={index} src={src} alt={`Preview ${index + 1}`} className="max-w-full h-24 object-cover rounded" />
+              ))}
+            </div>
           ) : (
-            <p>Drag and drop an image here or click to select</p>
+            <p>Drag and drop images here or click to select (max 10)</p>
           )}
           <input
             type="file"
+            multiple
             accept="image/jpeg,image/png"
             onChange={handleFileChange}
             className="hidden"
@@ -95,7 +119,7 @@ function ImageUpload() {
             onClick={() => fileInputRef.current.click()}
             className="mt-2 bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
           >
-            Select File
+            Select Files
           </button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -134,7 +158,7 @@ function ImageUpload() {
                 onChange={(e) => setShared(e.target.checked)}
                 className="mr-2"
               />
-              Share this image
+              Share these images
             </label>
           </div>
           <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">

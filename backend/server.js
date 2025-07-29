@@ -19,6 +19,7 @@ app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
 
+
 // Serve static files for uploaded images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
