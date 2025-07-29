@@ -6,6 +6,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import ImageUpload from './pages/ImageUpload';
 import MediaGallery from './pages/MediaGallery';
+import ContactForm from "./pages/ContactForm";
+import AdminMessages from "./pages/AdminMessages";
+import MyMessages from "./pages/MyMessages";
 
 function App() {
   return (
@@ -19,6 +22,9 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/upload" element={<ImageUpload />} />
             <Route path="/gallery" element={<MediaGallery />} />
+            <Route path="/contact" element={<ContactForm />} />
+            <Route path="/admin/users" element={<AdminMessages />} />
+            <Route path="/mymessages" element={<MyMessages />} />
           </Routes>
         </div>
       </Router>
