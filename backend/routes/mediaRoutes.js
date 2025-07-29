@@ -32,17 +32,12 @@ router.post('/upload', protect, upload.single('image'), async (req, res) => {
 });
 
 
-router.get('/media', protect, async (req, res) => {
+// New GET route to retrieve media for the authenticated user
+router.get('/', protect, async (req, res) => {
   try {
-    console.log('Request received for /media, userId:', req.user._id); // Debug
-    const media = await Media.find({ userId: req.user._id });
-    console.log('Media found:', media); // Debug
-    if (media.length === 0) {
-      return res.status(200).json([]); // Return empty array if no media
-    }
-    res.status(200).json(media);
+    const mediaList = await Media.find({ userId: req.user._id });
+    res.status(200).json({ message: 'Media retrieved successfully', media: mediaList });
   } catch (error) {
-    console.error('Error in /media route:', error); // Debug
     res.status(500).json({ message: error.message || 'Server error' });
   }
 });
