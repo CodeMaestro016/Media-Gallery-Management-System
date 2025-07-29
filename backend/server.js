@@ -7,6 +7,9 @@ import mediaRoutes from './routes/mediaRoutes.js';
 import passport from 'passport';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import contactRoutes from './routes/contactRoutes.js';
+import adminUserRoutes from './routes/adminUserRoutes.js';
+
 
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -22,6 +25,8 @@ app.use(passport.initialize());
 
 // Serve static files for uploaded images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/contact', contactRoutes);
+app.use('/api/admin/users', adminUserRoutes);
 
 // Connect to MongoDB
 connectDB();
