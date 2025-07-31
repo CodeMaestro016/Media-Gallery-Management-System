@@ -7,12 +7,13 @@ const router = express.Router();
 // Admin: get all users
 router.get('/', protect, admin, async (req, res) => {
   try {
-    const users = await User.find().select('-password');
-    res.json(users);
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.status(200).json({ message: 'Users retrieved', data: users });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 // Admin: update user profile (name, email, role)
 router.put('/:id', protect, admin, async (req, res) => {
